@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion des Départements</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: 'Arial', sans-serif;
+    }
+    .container {
+      margin-top: 30px;
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    h1, h2 {
+      color: #343a40;
+    }
+    .navbar {
+      display: flex;
+      justify-content: space-around;
+      background-color: royalblue;
+      padding: 15px 0;
+      box-shadow: 0 4px 25px rgba(0, 0, 0, 0.15);
+    }
+    .navbar a {
+      color: white;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: bold;
+      transition: color 0.3s ease;
+    }
+    .navbar a:hover {
+      color: #3b5fc9;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<div class="navbar">
+  <a href="#" id="roles-link">Gestion Des Rôles</a>
+  <a href="#" id="employees-link">Gestion des Employés</a>
+  <a href="#" id="departments-link">Gestion des Départements</a>
+  <a href="#" id="documents-link">Gestion des documents</a>
+  <a href="#" id="leaves-link">Gestion des congés</a>
+  <a href="#" id="profile-link">Profil</a>
+</div>
+
+<div class="container mt-5">
+  <h1 class="mb-4">Gestion des Départements</h1>
+  <h2>Ajouter un département</h2>
+  <div class="form-group">
+    <label for="departmentName">Nom du département</label>
+    <input type="text" class="form-control" id="departmentName" required>
+  </div>
+  <div class="form-group">
+    <label for="departmentDescription">Description du département</label>
+    <input type="text" class="form-control" id="departmentDescription">
+  </div>
+  <button class="btn btn-primary" onclick="addDepartment()">Ajouter</button>
+
+  <h2 class="mt-5">Liste des Départements</h2>
+  <table class="table table-striped">
+    <thead>
+    <tr>
+      <th>ID</th>
+      <th>Nom</th>
+      <th>Description</th>
+      <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody id="departmentsTableBody"></tbody>
+  </table>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+  function getUserId() {
+    const urlParams = new URLSearchParams(window.location.search);
+    let userId = urlParams.get('userId');
+    if (!userId) {
+      userId = localStorage.getItem('userId');
+    }
+    return userId || null;
+  }
+
+  function setNavbarLinks(userId) {
+    if (userId) {
+      document.getElementById('roles-link').href = `roleList.html?userId=${userId}`;
+      document.getElementById('employees-link').href = `employeesList.html?userId=${userId}`;
+      document.getElementById('departments-link').href = `departmentsList.html?userId=${userId}`;
+      document.getElementById('documents-link').href = `documentList.html?userId=${userId}`;
+      document.getElementById('leaves-link').href = `leaveList.html?userId=${userId}`;
+      document.getElementById('profile-link').href = `ProfilAdmin.html?userId=${userId}`;
+    }
+  }
+
+  function loadUserProfile() {
+    const userId = getUserId();
+    if (!userId) {
+      console.error('User ID not found. Please login again.');
+      return;
+    }
+    setNavbarLinks(userId);
+  }
+
+  window.onload = function() {
+    loadUserProfile();
+    fetchDepartments();
+  };
+
+  // The rest of your JavaScript functions like fetchDepartments(), addDepartment(), deleteDepartment(), etc.
+</script>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
