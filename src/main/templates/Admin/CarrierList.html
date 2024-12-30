@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Carrières</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Arial', sans-serif;
+        }
+        .container {
+            margin-top: 30px;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            color: #343a40;
+        }
+        .navbar {
+            display: flex;
+            justify-content: space-around;
+            background-color: royalblue;
+            padding: 15px 0;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.15);
+        }
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        .navbar a:hover {
+            color: #3b5fc9;
+        }
+        button {
+            padding: 7px 15px;
+            background-color: royalblue;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #3b5fc9;
+        }
+        .table {
+            margin-top: 20px;
+        }
+        .table th {
+            background-color: royalblue;
+            color: white;
+        }
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<div class="navbar">
+    <a href="#" id="roles-link">Gestion des Rôles</a>
+    <a href="#" id="employees-link">Gestion des Employés</a>
+    <a href="#" id="departments-link">Gestion des Départements</a>
+    <a href="#" id="documents-link">Gestion des Documents</a>
+    <a href="#" id="leaves-link">Gestion des Congés</a>
+    <a href="#" id="profile-link">Profil</a>
+    <a href="#" id="carrier-link">Gestion des Carrières</a>
+    <a href="WelcomePage.html">Déconnexion</a>
+</div>
+
+<div class="container">
+    <h1>Gestion des Carrières des Employés</h1>
+
+    <h2 class="mt-5">Employés avec une carrière</h2>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nom</th>
+            <th>Email</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody id="employeesWithCareerTableBody"></tbody>
+    </table>
+
+    <h2 class="mt-5">Employés sans carrière</h2>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nom</th>
+            <th>Email</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody id="employeesWithoutCareerTableBody"></tbody>
+    </table>
+</div>
+
+<script>
+    async function fetchEmployeesAndCareers() {
+        try {
+            const employees = await fetch('http://localhost:8081/api/employees').then(res => res.json());
+            const careers = await fetch('http://localhost:8081/api/careers').then(res => res.json());
+
+            const careerEmployeeIds = careers.map(career => career.employee.id);
+
+            const employeesWithCareerTableBody = document.getElementById('employeesWithCareerTableBody');
+            const employeesWithoutCareerTableBody = document.getElementById('employeesWithoutCareerTableBody');
+
+            employeesWithCareerTableBody.innerHTML = '';
+            employeesWithoutCareerTableBody.innerHTML = '';
+
+            employees.forEach(employee => {
+                const hasCareer = careerEmployeeIds.includes(employee.id);
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+          <td>${employee.id}</td>
+          <td>${employee.firstName + " " + employee.lastName}</td>
+          <td>${employee.email}</td>
+          <td>
+            <button class="btn btn-${hasCareer ? 'warning' : 'success'} btn-sm" onclick="handleCareerAction(${employee.id}, ${hasCareer})">
+              ${hasCareer ? '<i class="fas fa-edit"></i> Modifier' : '<i class="fas fa-plus"></i> Ajouter'}
+            </button>
+          </td>
+        `;
+
+                if (hasCareer) {
+                    employeesWithCareerTableBody.appendChild(row);
+                } else {
+                    employeesWithoutCareerTableBody.appendChild(row);
+                }
+            });
+        } catch (error) {
+            console.error('Erreur lors de la récupération des données:', error);
+        }
+    }
+
+    function handleCareerAction(employeeId, hasCareer) {
+        const baseUrl = 'FormCarrier.html';
+        const url = `${baseUrl}?employeeId=${employeeId}&edit=${hasCareer}`;
+        window.location.href = url;
+    }
+
+    function setNavbarLinks(userId) {
+        if (userId) {
+            document.getElementById('roles-link').href = `roleList.html?userId=${userId}`;
+            document.getElementById('employees-link').href = `employeesList.html?userId=${userId}`;
+            document.getElementById('departments-link').href = `departmentsList.html?userId=${userId}`;
+            document.getElementById('documents-link').href = `documentList.html?userId=${userId}`;
+            document.getElementById('leaves-link').href = `leaveList.html?userId=${userId}`;
+            document.getElementById('profile-link').href = `ProfilAdmin.html?userId=${userId}`;
+            document.getElementById('carrier-link').href = `CarrierList.html?userId=${userId}`;
+        }
+    }
+
+    fetchEmployeesAndCareers();
+    setNavbarLinks(1);
+</script>
+</body>
+</html>

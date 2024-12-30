@@ -40,6 +40,10 @@
     .navbar a:hover {
       color: #3b5fc9;
     }
+    /* Style des boutons */
+    .btn-success, .btn-danger {
+      margin-right: 10px;
+    }
   </style>
   <script>
     function setProfileLink(userId) {
@@ -80,6 +84,7 @@
                     <td>${request.employee.id}</td>
                     <td>${request.documentType}</td>
                     <td>${new Date(request.requestDate).toLocaleDateString()}</td>
+                    <td>${request.status || 'En attente'}</td> <!-- Ajout du statut ici -->
                     <td>
                       <button class="btn btn-success" onclick="acceptRequest(${request.id})">Accepter</button>
                       <button class="btn btn-danger" onclick="rejectRequest(${request.id})">Rejeter</button>
@@ -94,14 +99,14 @@
     }
 
     function acceptRequest(requestId) {
-      fetch(`http://localhost:8081/api/document-requests/${requestId}/accept`, {
-        method: 'POST'
+      fetch(`http://localhost:8081/api/document-requests/${requestId}/status?status=Accepted`, {
+        method: 'PUT' // Utilisation de PUT pour mettre à jour le statut
       })
               .then(response => {
                 if (!response.ok) {
                   return response.text().then(errMsg => { throw new Error(errMsg || 'Erreur lors de l’acceptation de la demande'); });
                 }
-                document.getElementById(`request-${requestId}`).remove();
+                document.getElementById(`request-${requestId}`).querySelector('td:nth-child(5)').textContent = 'Acceptée'; // Met à jour le statut dans la table
                 alert('Demande acceptée.');
               })
               .catch(error => {
@@ -109,6 +114,25 @@
                 alert(`Erreur : ${error.message}`);
               });
     }
+
+    function rejectRequest(requestId) {
+      fetch(`http://localhost:8081/api/document-requests/${requestId}/status?status=Rejected`, {
+        method: 'PUT' // Utilisation de PUT pour mettre à jour le statut
+      })
+              .then(response => {
+                if (response.ok) {
+                  document.getElementById(`request-${requestId}`).querySelector('td:nth-child(5)').textContent = 'Rejetée'; // Met à jour le statut dans la table
+                  alert('Demande rejetée.');
+                } else {
+                  throw new Error('Erreur lors de la mise à jour du statut');
+                }
+              })
+              .catch(error => {
+                console.error('Erreur:', error);
+                alert(`Erreur : ${error.message}`);
+              });
+    }
+
     function setNavbarLinks(userId) {
       if (userId) {
         document.getElementById('roles-link').href = `roleList.html?userId=${userId}`;
@@ -117,23 +141,8 @@
         document.getElementById('documents-link').href = `documentList.html?userId=${userId}`;
         document.getElementById('leaves-link').href = `leaveList.html?userId=${userId}`;
         document.getElementById('profile-link').href = `ProfilAdmin.html?userId=${userId}`;
+        document.getElementById('carrier-link').href = `CarrierList.html?userId=${userId}`;
       }
-    }
-    function rejectRequest(requestId) {
-      fetch(`http://localhost:8081/api/document-requests/${requestId}`, {
-        method: 'DELETE'
-      })
-              .then(response => {
-                if (response.ok) {
-                  document.getElementById(`request-${requestId}`).remove();
-                  alert('Demande rejetée et supprimée');
-                } else {
-                  throw new Error('Erreur lors de la suppression de la demande');
-                }
-              })
-              .catch(error => {
-                console.error('Erreur:', error);
-              });
     }
 
     window.onload = function() {
@@ -150,7 +159,10 @@
   <a href="#" id="documents-link">Gestion des documents</a>
   <a href="#" id="leaves-link">Gestion des congés</a>
   <a href="#" id="profile-link">Profil</a>
+  <a href="#" id="carrier-link">Gestion des Carriers</a>
+  <a href="WelcomePage.html">Déconnexion</a>
 </div>
+
 <div class="container mt-5">
   <h1>Demandes de Documents</h1>
   <table class="table table-striped">
@@ -160,6 +172,7 @@
       <th>ID Employé</th>
       <th>Type de Document</th>
       <th>Date de Demande</th>
+      <th>Statut</th> <!-- Nouvelle colonne pour le statut -->
       <th>Actions</th>
     </tr>
     </thead>

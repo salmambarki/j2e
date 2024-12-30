@@ -1,32 +1,172 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>User Profile</title>
+  <title>Profil Employé</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f0f4f8;
+      margin: 0;
+      padding: 0;
+    }
+
+    .profile-container {
+      max-width: 800px;
+      margin: 50px auto;
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 4px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .title {
+      font-size: 32px;
+      color: royalblue;
+      font-weight: bold;
+      text-transform: uppercase;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .info {
+      font-size: 18px;
+      color: #333;
+      margin: 15px 0;
+    }
+
+    .info label {
+      font-weight: bold;
+    }
+
+    .error-message {
+      color: red;
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: space-around;
+      background-color: royalblue;
+      padding: 15px 0;
+      box-shadow: 0 4px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .navbar a {
+      color: white;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: bold;
+      transition: color 0.3s ease;
+    }
+
+    .navbar a:hover {
+      color: #3b5fc9;
+    }
+
+    /* Responsive design for small screens */
+    @media (max-width: 600px) {
+      .profile-container {
+        padding: 20px;
+      }
+
+      .title {
+        font-size: 24px;
+      }
+
+      .info {
+        font-size: 16px;
+      }
+    }
+  </style>
 </head>
 <body>
 
-<div id="user-profile">
-  <h1>Welcome, <span id="username"></span></h1>
-  <!-- Ajouter d'autres informations sur l'utilisateur ici -->
+<!-- Navigation Bar -->
+<div class="navbar">
+  <a id="profileLink" href="#">Profile</a>
+  <a id="leaveRequestLink" href="#">Demande de Congés</a>
+  <a id="documentRequestLink" href="#">Demande de Document</a>
+  <a id="consultCareerLink" href="#">Consulter ma carrière</a>
+  <a href="../Admin/WelcomePage.html">Déconnexion</a>
 </div>
 
-<script>
-  // Récupérer l'ID de l'utilisateur depuis l'URL
-  const urlParams = new URLSearchParams(window.location.search);
-  const userId = urlParams.get('id');
+<!-- Profile content -->
+<div class="profile-container">
+  <p class="title">Profil Employé</p>
+  <div id="profile-info">
+    <!-- Employee info will be displayed here -->
+  </div>
+  <div class="error-message" id="error-message"></div>
+</div>
 
-  // Appeler l'API pour récupérer les informations de l'utilisateur
-  axios.get(`http://localhost:8081/api/users/${userId}`)
-          .then(response => {
-            // Afficher les informations de l'utilisateur
-            document.getElementById('username').innerText = response.data.username;
-          })
-          .catch(error => {
-            console.error('Error loading user data:', error);
-            alert('Failed to load user profile!');
-          });
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+  function getEmployeeId() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('employeeId');
+  }
+
+  function loadEmployeeProfile() {
+    const employeeId = getEmployeeId();
+
+    if (!employeeId) {
+      document.getElementById('error-message').textContent = 'ID utilisateur non trouvé. Veuillez vous reconnecter.';
+      return;
+    }
+
+    // Update navigation links with the employeeId
+    document.getElementById('profileLink').href = `profile.html?employeeId=${employeeId}`;
+    document.getElementById('leaveRequestLink').href = `leaveRequest.html?employeeId=${employeeId}`;
+    document.getElementById('documentRequestLink').href = `documentRequest.html?employeeId=${employeeId}`;
+    document.getElementById('consultCareerLink').href = `ConsulterCarrière.html?employeeId=${employeeId}`;
+
+    // Fetch employee profile data
+    axios.get(`http://localhost:8081/api/employees/${employeeId}`)
+            .then(response => {
+              const employee = response.data;
+
+              if (employee) {
+                const profileInfo = `
+            <div class="info">
+              <label>Prénom:</label> ${employee.firstName || 'N/A'}
+            </div>
+            <div class="info">
+              <label>Nom:</label> ${employee.lastName || 'N/A'}
+            </div>
+            <div class="info">
+              <label>Email:</label> ${employee.email || 'N/A'}
+            </div>
+            <div class="info">
+              <label>Téléphone:</label> ${employee.phoneNumber || 'N/A'}
+            </div>
+            <div class="info">
+              <label>Date d'embauche:</label> ${employee.hireDate ? new Date(employee.hireDate).toLocaleDateString() : 'N/A'}
+            </div>
+            <div class="info">
+              <label>Salaire:</label> ${employee.salary ? employee.salary.toFixed(2) : 'N/A'} €
+            </div>
+            <div class="info">
+              <label>Département:</label> ${employee.department?.name || 'N/A'}
+            </div>
+            <div class="info">
+              <label>Rôle:</label> ${employee.role?.name || 'N/A'}
+            </div>
+          `;
+                document.getElementById('profile-info').innerHTML = profileInfo;
+              } else {
+                document.getElementById('error-message').textContent = 'Aucune donnée trouvée pour cet employé.';
+              }
+            })
+            .catch(error => {
+              console.error('Erreur lors de la récupération des données de l\'employé:', error);
+              document.getElementById('error-message').textContent = 'Une erreur est survenue. Veuillez réessayer plus tard.';
+            });
+  }
+
+  window.onload = loadEmployeeProfile;
 </script>
 
 </body>

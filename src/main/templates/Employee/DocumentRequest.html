@@ -36,18 +36,98 @@
         .navbar a:hover {
             color: #3b5fc9;
         }
+
+        .document-list {
+            margin-top: 20px;
+        }
+
+        .document-item {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+        }
     </style>
     <script>
+        // Définir l'ID de l'employé globalement
+        let employeeId = null;
+
+        // Récupérer l'ID de l'employé depuis l'URL
+        function getEmployeeIdFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            employeeId = urlParams.get('employeeId');
+            if (!employeeId) {
+                alert("ID de l'employé non trouvé dans l'URL.");
+            }
+        }
+
+        // Mise à jour des liens de la navbar avec l'ID de l'employé
+        function updateNavbarLinks() {
+            if (!employeeId) return;
+
+            const navbarLinks = document.querySelectorAll('.navbar a');
+            navbarLinks.forEach(link => {
+                const url = new URL(link.href, window.location.origin);
+                url.searchParams.set('employeeId', employeeId);
+                link.href = url.toString();
+            });
+        }
+
+        // Fonction pour afficher les demandes de document
+        function fetchDocumentRequests() {
+            if (!employeeId) {
+                alert("ID de l'employé requis pour récupérer les demandes.");
+                return;
+            }
+
+            fetch(`http://localhost:8081/api/document-requests?employeeId=${employeeId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erreur lors de la récupération des demandes');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const documentList = document.getElementById('documentList');
+                    documentList.innerHTML = ''; // Effacer les demandes précédentes
+                    data.forEach(request => {
+                        const item = document.createElement('div');
+                        item.className = 'document-item';
+                        item.innerHTML = `
+                            <strong>Type:</strong> ${request.documentType} <br>
+                            <strong>Date:</strong> ${request.requestDate} <br>
+                            <strong>Statut:</strong> ${request.status} <br>
+                        `;
+                        documentList.appendChild(item);
+                    });
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                });
+        }
+
+        // Fonction pour soumettre une demande de document
         function submitRequest() {
             const documentType = document.getElementById('documentType').value;
-            const employeeId = document.getElementById('employeeId').value; // Assurez-vous que l'ID de l'employé est géré correctement
+            const requestDate = new Date().toISOString().split('T')[0]; // Date actuelle au format ISO (YYYY-MM-DD)
+
+            if (!employeeId) {
+                alert("Impossible de soumettre la demande sans ID d'employé.");
+                return;
+            }
 
             fetch('http://localhost:8081/api/document-requests', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ documentType, employee: { id: employeeId } })
+                body: JSON.stringify({
+                    documentType,
+                    requestDate,
+                    employee: { id: employeeId },
+                    status: 'En attente' // Par défaut, la demande est en statut "En attente"
+                })
             })
                 .then(response => {
                     if (!response.ok) {
@@ -55,11 +135,19 @@
                     }
                     alert('Demande de document soumise avec succès');
                     document.getElementById('documentType').value = '';
+                    fetchDocumentRequests(); // Mettre à jour la liste après soumission
                 })
                 .catch(error => {
                     console.error('Erreur:', error);
                 });
         }
+
+        // Charger l'ID de l'employé, mettre à jour les liens et récupérer les demandes au démarrage de la page
+        window.onload = function () {
+            getEmployeeIdFromURL();
+            updateNavbarLinks();
+            fetchDocumentRequests();
+        };
     </script>
 </head>
 <body>
@@ -67,16 +155,22 @@
 <div class="navbar">
     <a href="leaveRequest.html">Demande de Congés</a>
     <a href="documentRequest.html">Demande de Document</a>
-    <a href="career.html">Carrière</a>
+    <a href="ConsulterCarrière.html">Consulter ma carrière</a>
+    <a href="profile.html">Profile</a>
+    <a href="../Admin/WelcomePage.html">Déconnexion</a>
 </div>
+
 <div class="container">
     <h1>Demande de Document</h1>
     <div class="form-group">
-        <label for="employeeId">ID de l'Employé</label>
-        <input type="number" id="employeeId" class="form-control" placeholder="Entrez l'ID de l'employé" required>
-        <label for="documentType" class="mt-3">Type de Document</label>
+        <label for="documentType">Type de Document</label>
         <input type="text" id="documentType" class="form-control" placeholder="Entrez le type de document" required>
         <button class="btn btn-primary mt-3" onclick="submitRequest()">Soumettre</button>
+    </div>
+
+    <!-- Liste des demandes de document -->
+    <div class="document-list" id="documentList">
+        <!-- Les demandes seront ajoutées dynamiquement ici -->
     </div>
 </div>
 

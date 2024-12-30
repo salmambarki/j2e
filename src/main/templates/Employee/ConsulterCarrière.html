@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrière de l'Employé</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            margin-top: 30px;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        /* Navbar */
+        .navbar {
+            display: flex;
+            justify-content: space-around;
+            background-color: royalblue;
+            padding: 15px 0;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+
+        .navbar a:hover {
+            color: #3b5fc9;
+        }
+
+        .career-item {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+        }
+
+        .loader {
+            font-size: 1.5rem;
+            text-align: center;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+<!-- Navbar -->
+<div class="navbar">
+    <a id="profileLink" href="#">Profile</a>
+    <a id="leaveRequestLink" href="#">Demande de Congés</a>
+    <a id="documentRequestLink" href="#">Demande de Document</a>
+    <a id="consultCareerLink" href="#">Consulter ma carrière</a>
+    <a href="../Admin/WelcomePage.html">Déconnexion</a>
+</div>
+
+<div class="container">
+    <h1 class="text-center">Détails de la Carrière </h1>
+    <div id="career-info">
+        <div class="loader" id="loader">Chargement...</div>
+        <div id="career-list"></div>
+    </div>
+</div>
+
+<script>
+    function getEmployeeId() {
+        // Récupérer l'ID de l'employé depuis l'URL
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('employeeId');
+    }
+
+    function fetchCareerData() {
+        const employeeId = getEmployeeId(); // Récupérer l'ID de l'employé
+        if (!employeeId) {
+            document.getElementById('career-info').innerHTML = '<p class="text-danger">ID de l\'employé manquant.</p>';
+            return;
+        }
+        // Update navigation links with the employeeId
+        document.getElementById('profileLink').href = `profile.html?employeeId=${employeeId}`;
+        document.getElementById('leaveRequestLink').href = `leaveRequest.html?employeeId=${employeeId}`;
+        document.getElementById('documentRequestLink').href = `documentRequest.html?employeeId=${employeeId}`;
+        document.getElementById('consultCareerLink').href = `ConsulterCarrière.html?employeeId=${employeeId}`;
+        document.getElementById('loader').style.display = 'block';
+
+        // Appel API pour récupérer les données de carrière
+        fetch(`http://localhost:8081/api/careers/${employeeId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('loader').style.display = 'none';
+                const careerList = document.getElementById('career-list');
+                careerList.innerHTML = '';
+
+                // Vérification si data est un objet avec des propriétés attendues
+                if (!data || !data.employee) {
+                    careerList.innerHTML = '<p class="text-danger">Données de carrière manquantes ou format incorrect.</p>';
+                    console.error('Données reçues :', data);
+                    return;
+                }
+
+                // Vérification si data contient des informations de carrière
+                if (data.recruitmentDate) {
+                    const careerItem = `
+                        <div class="career-item">
+                            <p><strong>Date de Recrutement :</strong> ${data.recruitmentDate}</p>
+                            <p><strong>Date de Mobilité :</strong> ${data.mobilityDate || 'N/A'}</p>
+                            <p><strong>Discipline :</strong> ${data.discipline || 'N/A'}</p>
+                            <p><strong>Date de Départ :</strong> ${data.departureDate || 'N/A'}</p>
+                            <p><strong>Rémunération :</strong> ${data.remuneration} €</p>
+                        </div>
+                    `;
+                    careerList.innerHTML += careerItem;
+                } else {
+                    careerList.innerHTML += '<p class="text-warning">Aucune information de carrière trouvée pour cet employé.</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors du fetch:', error);
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('career-info').innerHTML = '<p class="text-danger">Erreur lors du chargement des informations. Veuillez réessayer plus tard.</p>';
+            });
+    }
+
+    // Appeler la fonction pour récupérer les données lorsque la page est prête
+    window.onload = function() {
+        fetchCareerData();
+    };
+</script>
+
+
+
+</body>
+</html>

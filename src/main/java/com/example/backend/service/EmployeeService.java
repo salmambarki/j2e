@@ -25,7 +25,10 @@ public class EmployeeService {
     public Employee createEmployee(Employee employee) {
         return employeeRepository.save(employee);
     }
-
+    public Optional<Integer> findEmployeeIdByEmailAndPassword(String email, String password) {
+        // Appel au repository pour récupérer l'ID en fonction de l'email et du mot de passe
+        return employeeRepository.findEmployeeIdByEmailAndPassword(email, password);
+    }
     public Employee updateEmployee(int id, Employee employeeDetails) {
         Optional<Employee> employeeOptional = employeeRepository.findById(id);
         if (employeeOptional.isPresent()) {

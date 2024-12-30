@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajouter ou Modifier une Carrière</title>
+    <style>
+        /* Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            margin: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        input[type="date"], input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        input[type="date"]:focus, input[type="text"]:focus, input[type="number"]:focus {
+            border-color: #5b9bd5;
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: royalblue;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: royalblue;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1 id="form-title">Ajouter une Carrière</h1>
+    <form id="career-form">
+        <div class="form-group">
+            <label for="recruitment-date">Date de Recrutement :</label>
+            <input type="date" id="recruitment-date" name="recruitmentDate" required>
+        </div>
+
+        <div class="form-group">
+            <label for="mobility-date">Date de Mobilité :</label>
+            <input type="date" id="mobility-date" name="mobilityDate">
+        </div>
+
+        <div class="form-group">
+            <label for="discipline">Discipline :</label>
+            <input type="text" id="discipline" name="discipline">
+        </div>
+
+        <div class="form-group">
+            <label for="departure-date">Date de Départ :</label>
+            <input type="date" id="departure-date" name="departureDate">
+        </div>
+
+        <div class="form-group">
+            <label for="remuneration">Rémunération :</label>
+            <input type="number" id="remuneration" name="remuneration" required>
+        </div>
+
+        <button type="submit" id="submit-btn">Ajouter</button>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Extraire les paramètres de l'URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const employeeId = urlParams.get('employeeId');  // Extraire l'ID de l'employé
+        const edit = urlParams.get('edit') === 'true'; // "edit" est true si l'on est en mode modification
+        const careerId = urlParams.get('careerId');
+
+        // Vérification si employeeId est valide
+        if (!employeeId) {
+            alert("L'ID de l'employé est manquant dans l'URL.");
+            return;
+        }
+
+        // Si "edit" est vrai, il s'agit de la modification
+        if (edit && careerId) {
+            // Simuler une requête pour récupérer les données de la carrière existante
+            fetch(`/api/careers/${careerId}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('form-title').textContent = 'Modifier la Carrière';
+                    document.getElementById('recruitment-date').value = data.recruitmentDate || '';
+                    document.getElementById('mobility-date').value = data.mobilityDate || '';
+                    document.getElementById('discipline').value = data.discipline || '';
+                    document.getElementById('departure-date').value = data.departureDate || '';
+                    document.getElementById('remuneration').value = data.remuneration || '';
+                    document.getElementById('submit-btn').textContent = 'Mettre à jour';
+                })
+                .catch(error => {
+                    console.error('Erreur lors du chargement de la carrière:', error);
+                    alert("Erreur lors du chargement des données de la carrière.");
+                });
+        }
+
+        // Soumission du formulaire
+        const form = document.getElementById('career-form');
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(form);
+            const careerData = {
+                employee: {id:employeeId},  // Ajouter l'ID de l'employé
+                recruitmentDate: formData.get('recruitmentDate'),
+                mobilityDate: formData.get('mobilityDate'),
+                discipline: formData.get('discipline'),
+                departureDate: formData.get('departureDate'),
+                remuneration: formData.get('remuneration'),
+            };
+
+            // Vérifier que les champs obligatoires sont remplis
+            if (!careerData.recruitmentDate || !careerData.remuneration) {
+                alert("Les champs 'Date de Recrutement' et 'Rémunération' sont obligatoires.");
+                return;
+            }
+
+            let method = 'POST';
+            let url = 'http://localhost:8081/api/careers';
+
+            if (edit && careerId) {
+                method = 'PUT';
+                url = `http://localhost:8081/api/careers/${careerId}`;
+            }
+
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(careerData),
+            })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.href = `/employee/${employeeId}/career-list`; // Redirection après soumission
+                    } else {
+                        return response.json().then(errorData => {
+                            alert(`Erreur lors de l'ajout ou de la modification de la carrière: ${errorData.message}`);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    alert('Erreur de communication avec le serveur.');
+                });
+        });
+    });
+</script>
+</body>
+</html>

@@ -7,6 +7,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 @CrossOrigin("*")
 @RestController
@@ -15,7 +16,19 @@ public class EmployeeController {
 
     @Autowired
     private EmployeeService employeeService;
+    @PostMapping("/findByEmailAndPassword")
+    public ResponseEntity<?> findEmployeeIdByEmailAndPassword(@RequestBody Map<String, String> credentials) {
+        String email = credentials.get("email");
+        String password = credentials.get("password");
 
+        Optional<Integer> employeeId = employeeService.findEmployeeIdByEmailAndPassword(email, password);
+
+        if (employeeId.isPresent()) {
+            return ResponseEntity.ok(employeeId.get()); // Retourne l'ID de l'employé
+        } else {
+            return ResponseEntity.status(401).body("Email ou mot de passe incorrect");
+        }
+    }
     @GetMapping
     public List<Employee> getAllEmployees() {
         return employeeService.getAllEmployees();

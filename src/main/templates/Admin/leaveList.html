@@ -35,13 +35,15 @@
     }
   </style>
   <script>
-    // Update the profile link with user ID
+    let leaveRequests = []; // Variable pour stocker les demandes de congé
+
+    // Met à jour les liens du profil avec l'ID utilisateur
     function setProfileLink(userId) {
       const profileLink = document.getElementById('profile-link');
       profileLink.href = `ProfilAdmin.html?userId=${userId}`;
     }
 
-    // Retrieve user ID from URL or local storage
+    // Récupère l'ID utilisateur depuis l'URL ou localStorage
     function getUserId() {
       const urlParams = new URLSearchParams(window.location.search);
       let userId = urlParams.get('userId');
@@ -51,7 +53,7 @@
       return userId || null;
     }
 
-    // Load user profile data
+    // Charge les données du profil utilisateur
     function loadUserProfile() {
       const userId = getUserId();
       if (userId) {
@@ -61,6 +63,8 @@
         console.error('User ID not found. Please log in again.');
       }
     }
+
+    // Définit les liens de la barre de navigation
     function setNavbarLinks(userId) {
       if (userId) {
         document.getElementById('roles-link').href = `roleList.html?userId=${userId}`;
@@ -69,57 +73,81 @@
         document.getElementById('documents-link').href = `documentList.html?userId=${userId}`;
         document.getElementById('leaves-link').href = `leaveList.html?userId=${userId}`;
         document.getElementById('profile-link').href = `ProfilAdmin.html?userId=${userId}`;
+        document.getElementById('carrier-link').href = `CarrierList.html?userId=${userId}`;
       }
     }
-    // Fetch leave requests from the API
+
+    // Récupère les demandes de congé depuis l'API
     function fetchLeaveRequests() {
-      fetch('http://localhost:8081/api/leave-requests')
+      fetch('http://localhost:8081/api/leaves')
               .then(response => response.json())
               .then(data => {
-                const tableBody = document.getElementById('adminLeaveRequests');
-                tableBody.innerHTML = '';
-                data.forEach(request => {
-                  const row = document.createElement('tr');
-                  row.innerHTML = `
-              <td>${request.employee.name}</td>
-              <td>${request.startDate}</td>
-              <td>${request.endDate}</td>
-              <td>${request.status}</td>
-              <td>
-                <button class="btn btn-success" onclick="acceptLeave(${request.id})">Accepter</button>
-                <button class="btn btn-danger" onclick="rejectLeave(${request.id})">Rejeter</button>
-              </td>`;
-                  tableBody.appendChild(row);
-                });
+                leaveRequests = data; // Met à jour les données locales
+                renderLeaveRequests();
               })
               .catch(error => console.error('Erreur:', error));
     }
 
-    // Accept a leave request
+    // Affiche les demandes de congé dans le tableau
+    function renderLeaveRequests() {
+      const tableBody = document.getElementById('adminLeaveRequests');
+      tableBody.innerHTML = '';
+      leaveRequests.forEach(request => {
+        const row = document.createElement('tr');
+        row.id = `row-${request.id}`;
+        row.innerHTML = `
+          <td>${request.employee.firstName} ${request.employee.lastName}</td>
+          <td>${request.startDate}</td>
+          <td>${request.endDate}</td>
+          <td>${request.status}</td>
+          <td id="actions-${request.id}">
+            <button class="btn btn-success" onclick="acceptLeave(${request.id})">Accepter</button>
+            <button class="btn btn-danger" onclick="rejectLeave(${request.id})">Rejeter</button>
+          </td>`;
+        tableBody.appendChild(row);
+      });
+    }
+
+    // Met à jour le statut de congé via une requête PUT
+    function updateLeaveStatus(id, status) {
+      const apiUrl = `http://localhost:8081/api/leaves/${id}/status?status=${status}`;
+
+      fetch(apiUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json', // En-têtes nécessaires
+        }
+      })
+              .then(response => {
+                if (!response.ok) {
+                  throw new Error(`Erreur lors de la mise à jour du statut`);
+                }
+                return response.json();
+              })
+              .then(updatedLeave => {
+                console.log('Mise à jour réussie:', updatedLeave);
+                fetchLeaveRequests(); // Recharge les demandes pour afficher le changement
+              })
+              .catch(error => {
+                console.error('Erreur lors de la mise à jour du statut:', error);
+              });
+    }
+
+    // Accepter une demande de congé
     function acceptLeave(id) {
-      fetch(`http://localhost:8081/api/leave-requests/${id}/accept`, { method: 'POST' })
-              .then(response => {
-                if (response.ok) {
-                  alert('Demande acceptée.');
-                  fetchLeaveRequests(); // Update the list
-                }
-              })
-              .catch(error => console.error('Erreur:', error));
+      updateLeaveStatus(id, 'Accepté');
+      // Supprimer les boutons d'action de la ligne
+      document.getElementById(`actions-${id}`).innerHTML = `<span class="text-success">Accepté</span>`;
     }
 
-    // Reject a leave request
+    // Rejeter une demande de congé
     function rejectLeave(id) {
-      fetch(`http://localhost:8081/api/leave-requests/${id}/reject`, { method: 'POST' })
-              .then(response => {
-                if (response.ok) {
-                  alert('Demande rejetée.');
-                  fetchLeaveRequests(); // Update the list
-                }
-              })
-              .catch(error => console.error('Erreur:', error));
+      updateLeaveStatus(id, 'Rejeté');
+      // Supprimer les boutons d'action de la ligne
+      document.getElementById(`actions-${id}`).innerHTML = `<span class="text-danger">Rejeté</span>`;
     }
 
-    // Initialize data and profile link on page load
+    // Initialisation
     window.onload = function() {
       loadUserProfile();
       fetchLeaveRequests();
@@ -129,12 +157,14 @@
 <body>
 <!-- Navbar -->
 <div class="navbar">
-  <a href="#" id="roles-link">Gestion Des Rôles</a>
+  <a href="#" id="roles-link">Gestion des Rôles</a>
   <a href="#" id="employees-link">Gestion des Employés</a>
   <a href="#" id="departments-link">Gestion des Départements</a>
-  <a href="#" id="documents-link">Gestion des documents</a>
-  <a href="#" id="leaves-link">Gestion des congés</a>
+  <a href="#" id="documents-link">Gestion des Documents</a>
+  <a href="#" id="leaves-link">Gestion des Congés</a>
   <a href="#" id="profile-link">Profil</a>
+  <a href="#" id="carrier-link">Gestion des Carriers</a>
+  <a href="WelcomePage.html">Déconnexion</a>
 </div>
 
 <div class="container mt-5">
@@ -143,14 +173,14 @@
     <thead>
     <tr>
       <th>Employé</th>
-      <th>Date de début</th>
-      <th>Date de fin</th>
+      <th>Date de Début</th>
+      <th>Date de Fin</th>
       <th>Statut</th>
       <th>Actions</th>
     </tr>
     </thead>
     <tbody id="adminLeaveRequests">
-    <!-- Leave requests will be dynamically added here by JavaScript -->
+    <!-- Les demandes de congé seront ajoutées ici -->
     </tbody>
   </table>
 </div>

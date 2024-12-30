@@ -40,7 +40,6 @@
             padding: 15px 0;
             box-shadow: 0 4px 25px rgba(0, 0, 0, 0.15);
         }
-
         .navbar a {
             color: white;
             text-decoration: none;
@@ -48,197 +47,76 @@
             font-weight: bold;
             transition: color 0.3s ease;
         }
-
         .navbar a:hover {
             color: #3b5fc9;
         }
     </style>
-    <script>
-        function setProfileLink(userId) {
-            const profileLink = document.getElementById('profile-link');
-            profileLink.href = `ProfilAdmin.html?userId=${userId}`;
-        }
-
-        function getUserId() {
-            const urlParams = new URLSearchParams(window.location.search);
-            let userId = urlParams.get('userId');
-            if (!userId) {
-                userId = localStorage.getItem('userId');
-            }
-            return userId || null;
-        }
-
-        function loadUserProfile() {
-            const userId = getUserId();
-            if (userId) {
-                setProfileLink(userId);
-            } else {
-                console.error('User ID not found. Please login again.');
-            }
-            setNavbarLinks(userId);
-        }
-
-        function fetchEmployees() {
-            fetch('http://localhost:8081/api/employees')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Erreur dans la récupération des données');
-                    }
-                    return response.json();
-                })
-                .then(employees => {
-                    const tableBody = document.getElementById('employeesTableBody');
-                    tableBody.innerHTML = '';
-
-                    employees.forEach(employee => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${employee.id}</td>
-                            <td>${employee.firstName}</td>
-                            <td>${employee.lastName}</td>
-                            <td>${employee.email}</td>
-                            <td>${employee.phoneNumber}</td>
-                            <td>${employee.hireDate}</td>
-                            <td>${employee.salary}</td>
-                            <td>
-                                <button class="btn btn-warning btn-sm" onclick="editEmployee(${employee.id})"><i class="fas fa-edit"></i> Modifier</button>
-                                <button class="btn btn-danger btn-sm" onclick="deleteEmployee(${employee.id})"><i class="fas fa-trash"></i> Supprimer</button>
-                            </td>
-                        `;
-                        tableBody.appendChild(row);
-                    });
-                })
-                .catch(error => {
-                    console.error('Erreur:', error);
-                });
-        }
-
-        function addEmployee() {
-            const firstName = document.getElementById('firstName').value;
-            const lastName = document.getElementById('lastName').value;
-            const email = document.getElementById('email').value;
-            const phoneNumber = document.getElementById('phoneNumber').value;
-            const hireDate = document.getElementById('hireDate').value;
-            const salary = document.getElementById('salary').value;
-
-            fetch('http://localhost:8081/api/employees', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ firstName, lastName, email, phoneNumber, hireDate, salary })
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Erreur dans l\'ajout de l\'employé');
-                    }
-                    return response.json();
-                })
-                .then(() => {
-                    clearForm();
-                    fetchEmployees();
-                })
-                .catch(error => {
-                    console.error('Erreur:', error);
-                });
-        }
-
-        function deleteEmployee(employeeId) {
-            fetch(`http://localhost:8081/api/employees/${employeeId}`, {
-                method: 'DELETE'
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Erreur dans la suppression de l\'employé');
-                    }
-                    fetchEmployees();
-                })
-                .catch(error => {
-                    console.error('Erreur:', error);
-                });
-        }
-
-        function editEmployee(employeeId) {
-            const firstName = prompt("Entrez le nouveau prénom de l'employé:");
-            const lastName = prompt("Entrez le nouveau nom de l'employé:");
-            const email = prompt("Entrez le nouvel email de l'employé:");
-            const phoneNumber = prompt("Entrez le nouveau numéro de téléphone de l'employé:");
-            const hireDate = prompt("Entrez la nouvelle date d'embauche de l'employé:");
-            const salary = prompt("Entrez le nouveau salaire de l'employé:");
-
-            if (firstName && lastName && email && phoneNumber && hireDate && salary) {
-                fetch(`http://localhost:8081/api/employees/${employeeId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ firstName, lastName, email, phoneNumber, hireDate, salary })
-                })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Erreur dans la modification de l\'employé');
-                        }
-                        fetchEmployees();
-                    })
-                    .catch(error => {
-                        console.error('Erreur:', error);
-                    });
-            }
-        }
-        function setNavbarLinks(userId) {
-            if (userId) {
-                document.getElementById('roles-link').href = `roleList.html?userId=${userId}`;
-                document.getElementById('employees-link').href = `employeesList.html?userId=${userId}`;
-                document.getElementById('departments-link').href = `departmentsList.html?userId=${userId}`;
-                document.getElementById('documents-link').href = `documentList.html?userId=${userId}`;
-                document.getElementById('leaves-link').href = `leaveList.html?userId=${userId}`;
-                document.getElementById('profile-link').href = `ProfilAdmin.html?userId=${userId}`;
-            }
-        }
-
-        function clearForm() {
-            document.getElementById('firstName').value = '';
-            document.getElementById('lastName').value = '';
-            document.getElementById('email').value = '';
-            document.getElementById('phoneNumber').value = '';
-            document.getElementById('hireDate').value = '';
-            document.getElementById('salary').value = '';
-        }
-
-        window.onload = function() {
-            loadUserProfile();
-            fetchEmployees();
-        };
-    </script>
 </head>
 <body>
-
 <!-- Navbar -->
-<div class="navbar">
-    <a href="#" id="roles-link">Gestion Des Rôles</a>
-    <a href="#" id="employees-link">Gestion des Employés</a>
-    <a href="#" id="departments-link">Gestion des Départements</a>
-    <a href="#" id="documents-link">Gestion des documents</a>
-    <a href="#" id="leaves-link">Gestion des congés</a>
-    <a href="#" id="profile-link">Profil</a>
+<div class="navbar" id="navbar">
+    <a href="roleList.html">Gestion Des Rôles</a>
+    <a href="employeesList.html">Gestion des Employés</a>
+    <a href="departmentsList.html">Gestion des Départements</a>
+    <a href="documentList.html">Gestion des documents</a>
+    <a href="leaveList.html">Gestion des congés</a>
+    <a id="profile-link" href="#">Profil</a>
+    <a href="CarrierList.html">Gestion des Carriers</a>
+    <a href="WelcomePage.html">Déconnexion</a>
 </div>
 
-<div class="container mt-5">
+<div class="container">
     <h1 class="mb-4">Gestion des Employés</h1>
 
-    <!-- Formulaire pour ajouter un employé -->
-    <h2>Ajouter un Employé</h2>
-    <div class="form-group">
-        <input type="text" id="firstName" class="form-control" placeholder="Prénom" required>
-        <input type="text" id="lastName" class="form-control mt-2" placeholder="Nom" required>
-        <input type="email" id="email" class="form-control mt-2" placeholder="Email" required>
-        <input type="text" id="phoneNumber" class="form-control mt-2" placeholder="Téléphone">
-        <input type="date" id="hireDate" class="form-control mt-2" required>
-        <input type="number" id="salary" class="form-control mt-2" placeholder="Salaire" step="0.01" required>
-        <button class="btn btn-primary mt-2" onclick="addEmployee()">Ajouter</button>
-    </div>
+    <!-- Formulaire d'ajout/modification d'un employé -->
+    <h2>Ajouter ou Modifier un Employé</h2>
+    <form id="employeeForm">
+        <div class="form-group">
+            <label for="firstName">Prénom</label>
+            <input type="text" class="form-control" id="firstName" required>
+        </div>
+        <div class="form-group">
+            <label for="lastName">Nom</label>
+            <input type="text" class="form-control" id="lastName" required>
+        </div>
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" class="form-control" id="email" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Mot de passe</label>
+            <input type="password" class="form-control" id="password" required>
+        </div>
+        <div class="form-group">
+            <label for="phoneNumber">Numéro de téléphone</label>
+            <input type="text" class="form-control" id="phoneNumber">
+        </div>
+        <div class="form-group">
+            <label for="hireDate">Date d'embauche</label>
+            <input type="date" class="form-control" id="hireDate" required>
+        </div>
+        <div class="form-group">
+            <label for="salary">Salaire</label>
+            <input type="number" class="form-control" id="salary" step="0.01" required>
+        </div>
+        <div class="form-group">
+            <label for="department">Département</label>
+            <select class="form-control" id="department" required>
+                <!-- Options de département ajoutées dynamiquement -->
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="role">Rôle</label>
+            <select class="form-control" id="role" required>
+                <!-- Options de rôle ajoutées dynamiquement -->
+            </select>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="saveEmployee()">Ajouter/Modifier</button>
+    </form>
 
-    <table class="table table-striped mt-4">
+    <!-- Liste des employés -->
+    <h2 class="mt-5">Liste des Employés</h2>
+    <table class="table table-striped">
         <thead>
         <tr>
             <th>ID</th>
@@ -248,16 +126,159 @@
             <th>Téléphone</th>
             <th>Date d'embauche</th>
             <th>Salaire</th>
+            <th>Département</th>
+            <th>Rôle</th>
             <th>Actions</th>
         </tr>
         </thead>
         <tbody id="employeesTableBody">
-        <!-- Les données seront insérées ici par JavaScript -->
+        <!-- Employés ajoutés dynamiquement -->
         </tbody>
     </table>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+    let currentEmployeeId = null; // Variable pour stocker l'ID de l'employé à modifier
+    let userId = getUserId(); // Obtenir le userId depuis l'URL ou localStorage
+
+    // Fonction pour obtenir le userId depuis l'URL ou localStorage
+    function getUserId() {
+        const urlParams = new URLSearchParams(window.location.search);
+        let userId = urlParams.get('userId'); // Get userId from URL parameters
+
+        // Si userId n'est pas trouvé dans l'URL, on essaye de le récupérer depuis localStorage
+        if (!userId) {
+            userId = localStorage.getItem('userId');
+        }
+
+        return userId || null;
+    }
+
+    // Modifier les liens de la navbar pour inclure userId
+    function setNavbarLinks(userId) {
+        const profileLink = document.getElementById('profile-link');
+        if (userId) {
+            profileLink.href = `ProfilAdmin.html?userId=${userId}`;
+            const navbarLinks = document.querySelectorAll('.navbar a');
+            navbarLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                if (href && !href.includes('?userId=')) {
+                    link.href = `${href}?userId=${userId}`;
+                }
+            });
+        }
+    }
+
+    // Mettre à jour la navbar avec le userId
+    setNavbarLinks(userId);
+
+    // Charger les départements et rôles
+    function loadDepartmentsAndRoles() {
+        axios.get('http://localhost:8081/api/departments').then(response => {
+            const departmentSelect = document.getElementById('department');
+            response.data.forEach(department => {
+                const option = document.createElement('option');
+                option.value = department.id;
+                option.textContent = department.name;
+                departmentSelect.appendChild(option);
+            });
+        });
+
+        axios.get('http://localhost:8081/api/roles').then(response => {
+            const roleSelect = document.getElementById('role');
+            response.data.forEach(role => {
+                const option = document.createElement('option');
+                option.value = role.id;
+                option.textContent = role.name;
+                roleSelect.appendChild(option);
+            });
+        });
+    }
+
+    // Charger la liste des employés
+    function loadEmployees() {
+        axios.get('http://localhost:8081/api/employees').then(response => {
+            const tableBody = document.getElementById('employeesTableBody');
+            tableBody.innerHTML = '';
+            response.data.forEach(employee => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${employee.id}</td>
+                    <td>${employee.firstName}</td>
+                    <td>${employee.lastName}</td>
+                    <td>${employee.email}</td>
+                    <td>${employee.phoneNumber}</td>
+                    <td>${employee.hireDate}</td>
+                    <td>${employee.salary}</td>
+                    <td>${employee.department ? employee.department.name : ''}</td>
+                    <td>${employee.role ? employee.role.name : ''}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="editEmployee(${employee.id})"><i class="fas fa-edit"></i> Modifier</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteEmployee(${employee.id})"><i class="fas fa-trash"></i> Supprimer</button>
+                    </td>`;
+                tableBody.appendChild(row);
+            });
+        });
+    }
+
+    // Remplir le formulaire pour modifier un employé
+    function editEmployee(employeeId) {
+        axios.get(`http://localhost:8081/api/employees/${employeeId}`).then(response => {
+            const employee = response.data;
+            document.getElementById('firstName').value = employee.firstName;
+            document.getElementById('lastName').value = employee.lastName;
+            document.getElementById('email').value = employee.email;
+            document.getElementById('phoneNumber').value = employee.phoneNumber;
+            document.getElementById('hireDate').value = employee.hireDate;
+            document.getElementById('salary').value = employee.salary;
+            document.getElementById('department').value = employee.department.id;
+            document.getElementById('role').value = employee.role.id;
+            currentEmployeeId = employee.id; // Enregistrer l'ID de l'employé à modifier
+        });
+    }
+
+    // Ajouter ou modifier un employé
+    function saveEmployee() {
+        const employee = {
+            firstName: document.getElementById('firstName').value,
+            lastName: document.getElementById('lastName').value,
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value,
+            phoneNumber: document.getElementById('phoneNumber').value,
+            hireDate: document.getElementById('hireDate').value,
+            salary: document.getElementById('salary').value,
+            department: { id: document.getElementById('department').value },
+            role: { id: document.getElementById('role').value }
+        };
+
+        if (currentEmployeeId) {
+            // Modifier un employé
+            axios.put(`http://localhost:8081/api/employees/${currentEmployeeId}`, employee).then(() => {
+                currentEmployeeId = null;
+                loadEmployees();
+            });
+        } else {
+            // Ajouter un nouvel employé
+            axios.post('http://localhost:8081/api/employees', employee).then(() => {
+                loadEmployees();
+            });
+        }
+
+        document.getElementById('employeeForm').reset(); // Réinitialiser le formulaire
+    }
+
+    // Supprimer un employé
+    function deleteEmployee(employeeId) {
+        axios.delete(`http://localhost:8081/api/employees/${employeeId}`).then(() => loadEmployees());
+    }
+
+    // Charger les départements et rôles et la liste des employés au chargement de la page
+    window.onload = () => {
+        loadDepartmentsAndRoles();
+        loadEmployees();
+    };
+</script>
+
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login Page</title>
+  <title>Employee Login</title>
   <style>
     /* Conteneur global */
     body {
@@ -151,42 +151,42 @@
 <body>
 
 <form class="form" id="loginForm">
-  <p class="title">Login</p>
-  <p class="message">Enter your credentials to access your account.</p>
+  <p class="title">Employee Login</p>
+  <p class="message">Enter your credentials to access your employee account.</p>
   <label>
     <input required placeholder="Email" type="email" id="email" class="input">
   </label>
   <label>
     <input required placeholder="Password" type="password" id="password" class="input">
   </label>
-  <button type="button" class="submit" onclick="login()">Login</button>
-  <p class="signup">Don't have an account? <a href="SignupAdmin.html">Signup</a></p>
+  <button type="button" class="submit" onclick="loginEmployee()">Login</button>
+  <p class="signup">Don't have an account? <a href="SignupEmployee.html">Signup</a></p>
 </form>
 
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script>
-// Fonction de connexion
-function login() {
-const email = document.getElementById('email').value;
-const password = document.getElementById('password').value;
+  // Fonction de connexion pour les employés
+  function loginEmployee() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
 
-axios.post('http://localhost:8081/api/users/login', { email, password })
-.then(response => {
-if (response.data.success) {
-// Supposons que l'API renvoie l'ID ou un token d'authentification
-const userId = response.data.user.id;  // Ou un autre attribut comme le token
+    axios.post('http://localhost:8081/api/employees/findByEmailAndPassword', { email, password })
+            .then(response => {
+              if (response.status === 200) {
+                // Récupère l'ID de l'employé retourné par l'API
+                const employeeId = response.data;
 
-// Redirection vers la page du profil avec l'ID de l'utilisateur
-window.location.href = `Profile.html?id=${userId}`;
-} else {
-alert('Login failed!');
-}
-})
-.catch(error => {
-console.error('Login failed:', error);
-alert('Login failed!');
-});
-}
+                // Redirection vers la page du profil employé avec l'ID
+                window.location.href = `Profile.html?employeeId=${employeeId}`;
+              } else {
+                alert('Login failed!');
+              }
+            })
+            .catch(error => {
+              console.error('Login failed:', error);
+              alert('Invalid email or password!');
+            });
+  }
 </script>
 
 </body>

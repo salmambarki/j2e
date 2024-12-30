@@ -64,4 +64,15 @@ public class DocumentRequestController {
         documentRequestService.deleteDocumentRequest(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+    // Nouveau endpoint pour mettre à jour le statut d'une demande de document
+    @PutMapping("/{id}/status")
+    public ResponseEntity<DocumentRequest> updateDocumentRequestStatus(@PathVariable Long id, @RequestParam String status) {
+        try {
+            DocumentRequest updatedDocumentRequest = documentRequestService.updateDocumentRequestStatus(id, status);
+            return new ResponseEntity<>(updatedDocumentRequest, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
 }

@@ -21,6 +21,10 @@ public class DocumentRequest {
     @Column(name = "request_date", nullable = false)
     private LocalDate requestDate;
 
+    // Ajout de la variable 'status'
+    @Column(name = "status", nullable = false)
+    private String status;
+
     // Getters and Setters
     public Long getId() {
         return id;
@@ -53,5 +57,12 @@ public class DocumentRequest {
     public void setRequestDate(LocalDate requestDate) {
         this.requestDate = requestDate;
     }
-}
 
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+}
